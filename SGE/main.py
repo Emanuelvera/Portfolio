@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from fastapi.responses import HTMLResponse
 
 app = FastAPI()
@@ -54,7 +54,7 @@ def message():
 
 #Trae todos los empleados
 
-@app.get("/empleados", tags = ["empleados"])
+@app.get('/empleados', tags = ["empleados"])
 def get_empleados():
     return empleados
 
@@ -70,3 +70,48 @@ def get_empleado(id:int | None = None, Nombre:str| None = None, Apellido:str| No
             return item
         
     return []
+
+#Creacion de empleados
+
+@app.post ('/empleados',tags=["empleados"])
+def crear_empleado(id : int = Body(), Nombre : str = Body(), Apellido : str = Body(), Nacimiento : str = Body(), Empresa : str = Body(), Ingreso : str = Body(), Puesto : str = Body()):
+    empleados.append({
+        'id'         : id,
+        'Nombre'     : Nombre,
+        'Apellido'   : Apellido,
+        'Nacimiento' : Nacimiento,
+        'Empresa'    : Empresa,
+        'Ingreso'    : Ingreso,
+        'Puesto'     : Puesto
+    })
+    return empleados
+
+#Hacer modificaciones en los empleados
+
+@app.put('/empleados/{id}', tags=["empleados"])
+def modificar_empleados(id : int , Nombre : str = Body(), Apellido : str = Body(), Nacimiento : str = Body(), Empresa : str = Body(), Ingreso : str = Body(), Puesto : str = Body()):
+    for item in empleados:
+        if item ["id"] == id:
+            item["Nombre"] = Nombre,
+            item["Apellido"] = Apellido,
+            item["Nacimiento"] = Nacimiento,
+            item["Empresa"] = Empresa,
+            item["Ingreso"] = Ingreso,
+            item["Puesto"] = Puesto,
+            return empleados
+        
+
+@app.delete('/empleados/{id}', tags=["empleados"])
+def eliminar_empleado(id : int):
+    for item in empleados:
+        if item["id"] == id:
+            empleados.remove(item)
+            return empleados
+        
+        
+        
+
+
+
+
+                        
