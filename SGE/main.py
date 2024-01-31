@@ -1,21 +1,36 @@
-from fastapi import FastAPI, Body, Path, Query
+from fastapi import FastAPI, Body, Path, Query, Request, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.security.http import HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Any, Coroutine, Optional, List
+from starlette.requests import Request
+from jwt_manager import create_token, validate_token
+from fastapi.security import HTTPBearer
 
 app = FastAPI()
 
 app.title = "SGE (Sistema de Gestion de Empleados)"
 app.version = "0.0.1"
 
+class JWTBearer(HTTPBearer):
+    async def __call__(self, request: Request):
+        auth = await super().__call__(request)
+        data = validate_token(auth.credentials)
+        if data ['email'] != "admin":
+            raise HTTPException(status_code = 403, detail = "Credenciales invalidas")
+
+
+class User(BaseModel):
+    email:str
+    password:str
 
 class Empleado(BaseModel):
     id         : Optional[int] = None
     Nombre     : str = Field (max_length=30)
     Apellido   : str = Field (max_length=30)
-    Nacimiento : str = Field(max_length=8, min_length=8)
+    Nacimiento : str = Field(max_length=10, min_length=10)
     Empresa    : str = Field (max_length=10)
-    Ingreso    : str = Field(max_length=8, min_length=8)
+    Ingreso    : str = Field(max_length=10, min_length=10)
     Puesto     : str = Field (max_length=20)
 
     class Config:
@@ -30,8 +45,6 @@ class Empleado(BaseModel):
                 "Puesto"     : "Ingrese Puesto",
             }
         }
-
-
 
 
 empleados = [
@@ -66,8 +79,6 @@ empleados = [
     
 
 
-
-
 #FUNCIONES
 
 
@@ -77,6 +88,12 @@ empleados = [
 def message():
     return HTMLResponse("<h1>SGE</h1><h2>Nuevo empleado</h2><h2>Editar empleado</h2><h2>Eliminar empleado</h2>")
 
+#Login
+@app.post('/login', tags= ["auth"])
+def login(user: User):
+    if user.email == "admin" and user.password == "admin":
+        token : str = create_token(user.dict())
+        return JSONResponse(status_code = 200, content = token)
 
 #Trae todos los empleados
 
@@ -99,14 +116,14 @@ def get_empleado(id:int | None = None, Nombre:str| None = None, Apellido:str| No
 
 #Creacion de empleados
 
-@app.post ('/empleados',tags=["empleados"], response_model= dict, status_code = 201)
+@app.post ('/empleados',tags=["empleados"], response_model= dict, status_code = 201, dependencies = [Depends(JWTBearer())])
 def crear_empleado(empleado: Empleado)->dict:
     empleados.append(empleado)
-    return JSONResponse (status_code = 201, content = {"El empleado se ha registrado correctamente"})
+    return JSONResponse (status_code = 201, content = {"message" : "El empleado se ha registrado correctamente"})
 
 #Hacer modificaciones en los empleados
 
-@app.put('/empleados/{id}', tags=["empleados"], response_model= dict, status_code = 200)
+@app.put('/empleados/{id}', tags=["empleados"], response_model= dict, status_code = 200, dependencies = [Depends(JWTBearer())])
 def modificar_empleados(id : int, empleado : Empleado) -> dict:
     for item in empleados:
         if item ["id"] == id:
@@ -116,24 +133,20 @@ def modificar_empleados(id : int, empleado : Empleado) -> dict:
             item["Empresa"] = empleado.Empresa
             item["Ingreso"] = empleado.Ingreso
             item["Puesto"] = empleado.Puesto
-            return JSONResponse (status_code = 200, content = {"El empleado se ha modificado correctamente"})
+            return JSONResponse (status_code = 200, content = {"message" : "El empleado se ha modificado correctamente"})
         else:
             return JSONResponse(status_code = 404, content= [])
         
 
-@app.delete('/empleados/{id}', tags=["empleados"], response_model= dict, status_code = 200)
+@app.delete('/empleados/{id}', tags=["empleados"], response_model= dict, status_code = 200, dependencies = [Depends(JWTBearer())])
 def eliminar_empleado(id : int = Path(ge=1, le=2000)) -> dict:
     for item in empleados:
         if item["id"] == id:
             empleados.remove(item)
-            return JSONResponse (status_code = 200, content = {"El empleado se ha eliminado correctamente"})
+            return JSONResponse (status_code = 200, content = {"message" : "El empleado se ha eliminado correctamente"})
         else:
             return JSONResponse(status_code = 404, content= [])
         
-        
-        
-
-
 
 
                         
