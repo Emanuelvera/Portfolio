@@ -6,11 +6,17 @@ from typing import Any, Coroutine, Optional, List
 from starlette.requests import Request
 from jwt_manager import create_token, validate_token
 from fastapi.security import HTTPBearer
+from config.database import Session, engine, Base
+from models.empleado import Empleado as EmpleadoModel
+from fastapi.encoders import jsonable_encoder
 
 app = FastAPI()
 
 app.title = "SGE (Sistema de Gestion de Empleados)"
 app.version = "0.0.1"
+
+
+Base.metadata.create_all(bind = engine)
 
 class JWTBearer(HTTPBearer):
     async def __call__(self, request: Request):
@@ -18,7 +24,6 @@ class JWTBearer(HTTPBearer):
         data = validate_token(auth.credentials)
         if data ['email'] != "admin":
             raise HTTPException(status_code = 403, detail = "Credenciales invalidas")
-
 
 class User(BaseModel):
     email:str
@@ -99,9 +104,11 @@ def login(user: User):
 
 @app.get('/empleados', tags = ["empleados"], response_model= List[Empleado], status_code = 200)
 def get_empleados()-> List[Empleado]:
-    return JSONResponse (status_code = 200, content = empleados)
+    db = Session()
+    result = db.query(EmpleadoModel).all()
+    return JSONResponse (status_code = 200, content = jsonable_encoder(result))
 
-#Filtro de empleados
+#Filtro de empleados // queda pendiente conectarlo con la db
 
 @app.get('/empleados/filter', tags = ["empleados"],response_model= Empleado, status_code = 200)
 def get_empleado(id:int | None = None, Nombre:str| None = None, Apellido:str| None = None, Nacimiento:str| None = None, Empresa:str| None = None, Ingreso:str| None = None, Puesto:str| None = None)-> Empleado:
@@ -118,7 +125,10 @@ def get_empleado(id:int | None = None, Nombre:str| None = None, Apellido:str| No
 
 @app.post ('/empleados',tags=["empleados"], response_model= dict, status_code = 201, dependencies = [Depends(JWTBearer())])
 def crear_empleado(empleado: Empleado)->dict:
-    empleados.append(empleado)
+    db = Session()
+    new_empleado = EmpleadoModel(**empleado.dict())
+    db.add(new_empleado)
+    db.commit()
     return JSONResponse (status_code = 201, content = {"message" : "El empleado se ha registrado correctamente"})
 
 #Hacer modificaciones en los empleados
@@ -138,14 +148,21 @@ def modificar_empleados(id : int, empleado : Empleado) -> dict:
             return JSONResponse(status_code = 404, content= [])
         
 
+#Eliminar empleados
+
 @app.delete('/empleados/{id}', tags=["empleados"], response_model= dict, status_code = 200, dependencies = [Depends(JWTBearer())])
 def eliminar_empleado(id : int = Path(ge=1, le=2000)) -> dict:
-    for item in empleados:
+    db = Session()
+    result = db.query(EmpleadoModel).filter(EmpleadoModel.id == id).first()
+    for item in db.empleados:
         if item["id"] == id:
-            empleados.remove(item)
+            db.remove(result)
+            db.commit()
             return JSONResponse (status_code = 200, content = {"message" : "El empleado se ha eliminado correctamente"})
         else:
             return JSONResponse(status_code = 404, content= [])
+
+            
         
 
 
