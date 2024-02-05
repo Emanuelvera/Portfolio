@@ -112,14 +112,30 @@ def get_empleados()-> List[Empleado]:
 
 @app.get('/empleados/filter', tags = ["empleados"],response_model= Empleado, status_code = 200)
 def get_empleado(id:int | None = None, Nombre:str| None = None, Apellido:str| None = None, Nacimiento:str| None = None, Empresa:str| None = None, Ingreso:str| None = None, Puesto:str| None = None)-> Empleado:
-    for item in empleados:
-        for key, value in item.items():
-            if locals().get(key) is not None and value != locals()[key]:
-                break
-        else:
-            return JSONResponse (status_code = 200, content = item)
-        
-    return JSONResponse (status_code=404,content=[])
+    db = Session()
+
+    filters = {
+        'id': id,
+        'Nombre': Nombre,
+        'Apellido': Apellido,
+        'Nacimiento': Nacimiento,
+        'Empresa': Empresa,
+        'Ingreso': Ingreso,
+        'Puesto': Puesto,
+        # ... otros filtros ...
+    }
+
+    result = db.query(EmpleadoModel).filter(
+        *[getattr(EmpleadoModel, field) == value for field, value in filters.items() if value is not None]
+    )
+
+    empleado = result.first()
+
+    if empleado:
+        return empleado
+    else:
+        raise HTTPException(status_code=404, detail="Empleado no encontrado")
+
 
 #Creacion de empleados
 
@@ -135,18 +151,22 @@ def crear_empleado(empleado: Empleado)->dict:
 
 @app.put('/empleados/{id}', tags=["empleados"], response_model= dict, status_code = 200, dependencies = [Depends(JWTBearer())])
 def modificar_empleados(id : int, empleado : Empleado) -> dict:
-    for item in empleados:
-        if item ["id"] == id:
-            item["Nombre"] = empleado.Nombre
-            item["Apellido"] = empleado.Apellido
-            item["Nacimiento"] = empleado.Nacimiento
-            item["Empresa"] = empleado.Empresa
-            item["Ingreso"] = empleado.Ingreso
-            item["Puesto"] = empleado.Puesto
-            return JSONResponse (status_code = 200, content = {"message" : "El empleado se ha modificado correctamente"})
-        else:
-            return JSONResponse(status_code = 404, content= [])
-        
+    db = Session()
+    result = db.query(EmpleadoModel).filter(EmpleadoModel.id == id).first()
+    if not result:
+        return JSONResponse (status_code=404, content={"message" : "No se encontro ningun empleado"})
+    
+    result.Nombre = empleado.Nombre
+    result.Apellido = empleado.Apellido
+    result.Nacimiento = empleado.Nacimiento
+    result.Empresa = empleado.Empresa
+    result.Ingreso = empleado.Ingreso
+    result.Puesto = empleado.Puesto
+
+    db.commit()
+
+    return JSONResponse (status_code = 200, content = {"message" : "El empleado se ha modificado correctamente"})
+
 
 #Eliminar empleados
 
@@ -154,13 +174,13 @@ def modificar_empleados(id : int, empleado : Empleado) -> dict:
 def eliminar_empleado(id : int = Path(ge=1, le=2000)) -> dict:
     db = Session()
     result = db.query(EmpleadoModel).filter(EmpleadoModel.id == id).first()
-    for item in db.empleados:
-        if item["id"] == id:
-            db.remove(result)
-            db.commit()
-            return JSONResponse (status_code = 200, content = {"message" : "El empleado se ha eliminado correctamente"})
-        else:
-            return JSONResponse(status_code = 404, content= [])
+    if not result:
+        return JSONResponse (status_code=404, content={"message" : "No se encontro ningun empleado"})
+    db.delete(result)
+    db.commit()
+    
+    return JSONResponse (status_code = 200, content = {"message" : "El empleado se ha eliminado correctamente"})
+       
 
             
         
