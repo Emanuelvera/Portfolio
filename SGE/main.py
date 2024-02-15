@@ -22,9 +22,105 @@ Base.metadata.create_all(bind = engine)
 
 #Pagina de inicio
 
-@app.get("/", tags = ["home"])
-def message():
-    return HTMLResponse("<h1>SGE</h1><h2>Nuevo empleado</h2><h2>Editar empleado</h2><h2>Eliminar empleado</h2>")
+@app.get("/", tags = ["home"], response_class=HTMLResponse)
+async def message():
+    html_content = """
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGE - Sistema de Gestión de Usuarios</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
+        }
+        .title {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        .login-box {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 30px;
+            padding-right:10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        input[type="text"],
+        input[type="password"],
+        input[type="submit"] {
+            width: 90%;
+            padding:10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        input[type="submit"] {
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-gap: 20px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+    </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="title">SGE - Sistema de Gestión de Empleados</h1>
+            <div class="login-box">
+                <h2>Iniciar sesión</h2>
+                <form>
+                    <input type="text" name="email" placeholder="Correo electrónico">
+                    <input type="password" name="password" placeholder="Contraseña">
+                    <input type="submit" value="Iniciar sesión">
+                </form>
+            </div>
+            <div class="grid-container">
+                <div class="card">
+                    <buttom><h2>Crear usuario</h2></buttom>
+                    <p>Aquí puedes crear un nuevo usuario.</p>
+                </div>
+                <div class="card">
+                    <buttom><h2>Buscar usuarios</h2></buttom>
+                    <p>Aquí puedes buscar usuarios existentes.</p>
+                </div>
+                <div class="card">
+                    <buttom><h2>Modificar usuario</h2></buttom>
+                    <p>Aquí puedes modificar un usuario existente.</p>
+                </div>
+                <div class="card">
+                    <buttom><h2>Eliminar usuario</h2></buttom>
+                    <p>Aquí puedes eliminar un usuario existente.</p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content,status_code=200)
 
 
 
