@@ -34,7 +34,7 @@ def get_empleado(id:int | None = None, Nombre:str| None = None, Apellido:str| No
         id=id, Nombre=Nombre, Apellido=Apellido, Nacimiento=Nacimiento, Empresa=Empresa, Ingreso=Ingreso, Puesto=Puesto
     )
 
-    empleado = result.all()
+    empleado = result.first()
     if empleado:
         return empleado
     else:

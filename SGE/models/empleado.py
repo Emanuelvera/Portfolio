@@ -13,3 +13,5 @@ class Empleado(Base):
     Empresa    = Column (String)
     Ingreso    = Column (String)
     Puesto     = Column (String)
+
+
