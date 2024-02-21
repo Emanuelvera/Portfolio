@@ -48,3 +48,6 @@ uvicorn main:app --port 5000 --reload
 
 Finalmente, abre tu navegador web y accede a la siguiente dirección:
 http://127.0.0.1:5000
+
+Puedes ver la documentacion del mismo desde:
+http://127.0.0.1:5000/docs
