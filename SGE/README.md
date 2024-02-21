@@ -33,7 +33,6 @@ sge-env\Scripts\activate
 Una vez activado el entorno virtual, instala las dependencias del proyecto:
 
 ```bash
-Copy code
 pip3 install -r requirements.txt
 ```
 
