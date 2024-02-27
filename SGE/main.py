@@ -4,6 +4,8 @@ from config.database import engine, Base
 from middlewares.error_handler import ErrorHandler
 from routers.empleado import empleado_router
 from routers.user import user_router
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI()
 
@@ -19,6 +21,19 @@ app.include_router(user_router)
 Base.metadata.create_all(bind = engine)
 
 
+# Configuración de CORS
+origins = [
+    "*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
+
 
 #Pagina de inicio
 
@@ -31,6 +46,7 @@ async def message():
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SGE - Sistema de Gestión de Usuarios</title>
+    <!-- CSS -->
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -87,6 +103,7 @@ async def message():
       }
     </style>
   </head>
+  <!-- HTML -->
   <body>
     <div class="container">
       <h1 class="title">SGE - Sistema de Gestión de Empleados</h1>
@@ -100,59 +117,70 @@ async def message():
       </div>
       <div class="grid-container">
         <div class="card">
-          <buttom><h2>Crear usuario</h2></buttom>
+          <buttom><h2>Crear usuario </h2></buttom>
           <p>Aquí puedes crear un nuevo usuario.</p>
+          <button type="button" id="post-empleado">Create</button>
         </div>
         <div class="card">
           <buttom><h2>Buscar usuarios</h2></buttom>
           <p>Aquí puedes buscar usuarios existentes.</p>
           <button type="button" id="get-empleados">List All</button>
+          <button type="button" id="get-empleado">Filter</button>
         </div>
         <div class="card">
           <buttom><h2>Modificar usuario</h2></buttom>
           <p>Aquí puedes modificar un usuario existente.</p>
+          <button type="button" id="put-empleado">Modify</button>
         </div>
         <div class="card">
           <buttom><h2>Eliminar usuario</h2></buttom>
           <p>Aquí puedes eliminar un usuario existente.</p>
+          <button type="button" id="delete-empleado">Delete</button>
         </div>
       </div>
     </div>
+    <!-- JAVASCRIPT -->
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        document
-          .getElementById("login-button")
-          .addEventListener("click", function () {
-            event.preventDefault();
-            let email = document.querySelector('input[name="email"]').value;
-            let password = document.querySelector(
-              'input[name="password"]'
-            ).value;
+      document
+        .getElementById("login-button")
+        .addEventListener("click", function () {
+          event.preventDefault();
+          let email = document.querySelector('input[name="email"]').value;
+          let password = document.querySelector('input[name="password"]').value;
 
-            var loginData = {
-              email: email,
-              password: password,
-            };
+          var loginData = {
+            email: email,
+            password: password,
+          };
 
-            fetch("http://localhost:5000/login", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(loginData),
+          fetch("http://localhost:5000/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(loginData),
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("Error en la solicitud de inicio de sesión");
+              }
+              return response.json();
             })
-              .then((response) => {
-                document.getElementById("login-box").style.display = "none";
-                console.log(response);
-              })
-              .catch((error) => {
-                console.error("Error:", error);
-                alert(
-                  "Ocurrió un error al procesar tu solicitud. Inténtalo de nuevo más tarde."
-                );
-              });
-          });
-      });
+            .then((data) => {
+              localStorage.setItem("jwt_token", data.token); // Almacena el token en localStorage
+              console.log("Token JWT almacenado en el localStorage:", data.token);
+              document.getElementById("login-box").style.display = "none";
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert(
+                "Ocurrió un error al procesar tu solicitud. Inténtalo de nuevo más tarde."
+              );
+            });
+        });
+  });
+
 
       document.addEventListener("DOMContentLoaded", function () {
         document
@@ -176,6 +204,43 @@ async def message():
               });
           });
       });
+
+      document.addEventListener("DOMContentLoaded", function () {
+    document
+      .getElementById("delete-empleado")
+      .addEventListener("click", function () {
+        let token = localStorage.getItem("jwt_token"); // Obtener token JWT del localStorage
+        if (!token) {
+          console.error("No se encontró el token JWT en el localStorage");
+          return;
+        }
+
+        let id = prompt("Ingrese el ID del empleado a eliminar:");
+        if (!id) {
+          return; // Si no se proporciona un ID, salimos de la función
+        }
+
+        fetch(`http://localhost:5000/empleados/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            auth: `Bearer ${token}`, // Agregar el token JWT como header de autorización
+          },
+        })
+          .then((response) => {
+            if (response.ok) {
+              console.log("Empleado eliminado correctamente");
+            } else {
+              throw new Error("Error al eliminar el empleado");
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Ocurrió un error al procesar la solicitud.");
+          });
+        });
+      });
+
     </script>
   </body>
 </html>
