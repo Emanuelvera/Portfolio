@@ -11,16 +11,16 @@ class EmpleadoService():
         result = self.db.query(EmpleadoModel).all()
         return result
     
-    def get_empleado(self, id:int | None = None, Nombre:str| None = None, Apellido:str| None = None, Nacimiento:str| None = None, Empresa:str| None = None, Ingreso:str| None = None, Puesto:str| None = None):
+    def get_empleado(self, id:int | None = None, nombre:str| None = None, apellido:str| None = None, nacimiento:str| None = None, empresa:str| None = None, ingreso:str| None = None, puesto:str| None = None):
          
         filters = {
         'id': id,
-        'Nombre': Nombre,
-        'Apellido': Apellido,
-        'Nacimiento': Nacimiento,
-        'Empresa': Empresa,
-        'Ingreso': Ingreso,
-        'Puesto': Puesto,
+        'nombre': nombre,
+        'apellido': apellido,
+        'nacimiento': nacimiento,
+        'empresa': empresa,
+        'ingreso': ingreso,
+        'puesto': puesto,
         # ... otros filtros ...
         }
 
@@ -39,12 +39,12 @@ class EmpleadoService():
     
         empleado = self.db.query(EmpleadoModel).filter(EmpleadoModel.id == id).first()
          
-        empleado.Nombre = data.Nombre
-        empleado.Apellido = data.Apellido
-        empleado.Nacimiento = data.Nacimiento
-        empleado.Empresa = data.Empresa
-        empleado.Ingreso = data.Ingreso
-        empleado.Puesto = data.Puesto
+        empleado.nombre = data.nombre
+        empleado.apellido = data.apellido
+        empleado.nacimiento = data.nacimiento
+        empleado.empresa = data.empresa
+        empleado.ingreso = data.ingreso
+        empleado.puesto = data.puesto
 
         self.db.commit()
         return 

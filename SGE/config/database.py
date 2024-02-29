@@ -4,7 +4,7 @@ from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 
-#Nombre de la base de datos
+#nombre de la base de datos
 sqlite_file_name = "../database.sqlite"  
 
 #Lee el directorio actual de este archivo que es database.py

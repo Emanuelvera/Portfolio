@@ -142,44 +142,39 @@ async def message():
     <!-- JAVASCRIPT -->
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-      document
+    document
         .getElementById("login-button")
         .addEventListener("click", function () {
-          event.preventDefault();
-          let email = document.querySelector('input[name="email"]').value;
-          let password = document.querySelector('input[name="password"]').value;
+            event.preventDefault();
+            let email = document.querySelector('input[name="email"]').value;
+            let password = document.querySelector('input[name="password"]').value;
 
-          var loginData = {
-            email: email,
-            password: password,
-          };
+            var loginData = {
+                email: email,
+                password: password,
+            };
 
-          fetch("http://localhost:5000/login", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(loginData),
-          })
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error("Error en la solicitud de inicio de sesión");
-              }
-              return response.json();
+            fetch("http://localhost:5000/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(loginData),
             })
-            .then((data) => {
-              localStorage.setItem("jwt_token", data.token); // Almacena el token en localStorage
-              console.log("Token JWT almacenado en el localStorage:", data.token);
-              document.getElementById("login-box").style.display = "none";
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-              alert(
-                "Ocurrió un error al procesar tu solicitud. Inténtalo de nuevo más tarde."
-              );
-            });
+                .then((response) => {
+                    document.getElementById("login-box").style.display = "none";
+                    return response.text(); // Convertir la respuesta a texto
+                })
+                .then((data) => {
+                    localStorage.setItem("jwt_token", data); // Almacena el token en localStorage
+                    console.log("Token JWT almacenado en el localStorage:", data);
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("Ocurrió un error al procesar tu solicitud. Inténtalo de nuevo más tarde.");
+                });
         });
-  });
+});
 
 
       document.addEventListener("DOMContentLoaded", function () {

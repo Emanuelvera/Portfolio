@@ -27,11 +27,11 @@ def get_empleados()-> List[Empleado]:
 #Filtro de empleados // queda pendiente conectarlo con la db
 
 @empleado_router.get('/empleados/filter', tags = ["empleados"], response_model = Empleado, status_code = 200)
-def get_empleado(id:int | None = None, Nombre:str| None = None, Apellido:str| None = None, Nacimiento:str| None = None, Empresa:str| None = None, Ingreso:str| None = None, Puesto:str| None = None)-> Empleado:
+def get_empleado(id:int | None = None, nombre:str| None = None, apellido:str| None = None, nacimiento:str| None = None, empresa:str| None = None, ingreso:str| None = None, puesto:str| None = None)-> Empleado:
     db = Session()
 
     result = EmpleadoService(db).get_empleado(
-        id=id, Nombre=Nombre, Apellido=Apellido, Nacimiento=Nacimiento, Empresa=Empresa, Ingreso=Ingreso, Puesto=Puesto
+        id=id, nombre=nombre, apellido=apellido, nacimiento=nacimiento, empresa=empresa, ingreso=ingreso, puesto=puesto
     )
 
     empleado = result.first()
@@ -40,7 +40,7 @@ def get_empleado(id:int | None = None, Nombre:str| None = None, Apellido:str| No
     else:
         raise HTTPException(status_code=404, detail="Empleado no encontrado")
 
-
+    
 #Creacion de empleados
 
 @empleado_router.post ('/empleados',tags=["empleados"], response_model= dict, status_code = 201, dependencies = [Depends(JWTBearer())])
