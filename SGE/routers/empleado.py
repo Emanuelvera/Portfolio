@@ -25,20 +25,20 @@ def get_empleados()-> List[Empleado]:
     return JSONResponse (status_code = 200, content = jsonable_encoder(result))
 
 #Filtro de empleados // queda pendiente conectarlo con la db
-
-@empleado_router.get('/empleados/filter', tags = ["empleados"], response_model = Empleado, status_code = 200)
-def get_empleado(id:int | None = None, nombre:str| None = None, apellido:str| None = None, nacimiento:str| None = None, empresa:str| None = None, ingreso:str| None = None, puesto:str| None = None)-> Empleado:
+@empleado_router.get('/empleados/filter', tags=["empleados"], response_model=List[Empleado], status_code=200)
+def get_empleado(id: int | None = None, nombre: str | None = None, apellido: str | None = None,
+                 nacimiento: str | None = None, empresa: str | None = None, ingreso: str | None = None,
+                 puesto: str | None = None) -> List[Empleado]:
     db = Session()
 
     result = EmpleadoService(db).get_empleado(
         id=id, nombre=nombre, apellido=apellido, nacimiento=nacimiento, empresa=empresa, ingreso=ingreso, puesto=puesto
     )
 
-    empleado = result.first()
-    if empleado:
-        return empleado
+    if result:
+        return result
     else:
-        raise HTTPException(status_code=404, detail="Empleado no encontrado")
+        raise HTTPException(status_code=404, detail="Empleados no encontrados")
 
     
 #Creacion de empleados
@@ -73,4 +73,16 @@ def eliminar_empleado(id : int = Path(ge=1, le=2000)) -> dict:
         return JSONResponse (status_code=404, content={"message" : "No se encontro ningun empleado"})
     EmpleadoService(db).eliminar_empleado(id)    
     return JSONResponse (status_code = 200, content = {"message" : "El empleado se ha eliminado correctamente"})
+
+
+@empleado_router.get('/empleados/{id}', tags=["empleados"], response_model=Empleado, status_code=200, dependencies = [Depends(JWTBearer())])
+def get_empleado_by_id(id: int = Path(..., title="ID del Empleado a buscar")) -> Empleado:
+    db = Session()
+
+    empleado = EmpleadoService(db).get_empleado_by_id(id)
+
+    if empleado:
+        return empleado
+    else:
+        raise HTTPException(status_code=404, detail="Empleado no encontrado")
        
