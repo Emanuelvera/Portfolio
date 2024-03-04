@@ -237,46 +237,60 @@ async def message():
           });
         });
       });
-        
-    document.addEventListener("DOMContentLoaded", function () {
-    document
-      .getElementById("post-empleado")
-      .addEventListener("click", function () {
-        let token = localStorage.getItem("jwt_token"); // Obtener token JWT del localStorage
-        if (!token) {
-          console.error("No se encontró el token JWT en el localStorage");
-          return;
-        }
-        let nombre =  prompt("Ingrese el nombre del empleado a crear:");
-        let apellido =  prompt("Ingrese el apellido del empleado a crear:");
-        let nacimiento =  prompt("Ingrese el nacimiento del empleado a crear:");
-        let empresa =  prompt("Ingrese el empresa del empleado a crear:");
-        let ingreso =  prompt("Ingrese el ingreso del empleado a crear:");
-        let puesto =  prompt("Ingrese el puesto del empleado a crear:");
-        if (!nombre) {
-          return; // Si no se proporciona un nombre, salimos de la función
-        }
 
-        fetch(`http://localhost:5000/empleados`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`, // Agregar el token JWT como header de autorización
-          },
-        })
-          .then((response) => {
-            if (response.ok) {
-              console.log("Empleado creado correctamente");
-            } else {
-              throw new Error("Error al crear el empleado");
+      
+   document.addEventListener("DOMContentLoaded", function () {
+    document
+        .getElementById("post-empleado")
+        .addEventListener("click", function () {
+            let token = localStorage.getItem("jwt_token"); // Obtener token JWT del localStorage
+            if (!token) {
+                console.error("No se encontró el token JWT en el localStorage");
+                return;
             }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("Ocurrió un error al procesar la solicitud.");
-          });
+
+            let nombre = prompt("Ingrese el nombre del empleado a crear:");
+            let apellido = prompt("Ingrese el apellido del empleado a crear:");
+            let nacimiento = prompt("Ingrese el nacimiento del empleado a crear:");
+            let empresa = prompt("Ingrese el empresa del empleado a crear:");
+            let ingreso = prompt("Ingrese el ingreso del empleado a crear:");
+            let puesto = prompt("Ingrese el puesto del empleado a crear:");
+
+            if (!nombre || !apellido || !nacimiento || !empresa || !ingreso || !puesto) {
+                alert("Debe completar todos los campos.");
+                return; // Si no se proporcionan todos los campos, salimos de la función
+            }
+
+            let empleadoData = {
+                nombre: nombre,
+                apellido: apellido,
+                nacimiento: nacimiento,
+                empresa: empresa,
+                ingreso: ingreso,
+                puesto: puesto
+            };
+
+            fetch(`http://localhost:5000/empleados`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` // Agregar el token JWT como header de autorización
+                },
+                body: JSON.stringify(empleadoData) // Convertir los datos del empleado a JSON y enviarlos en el cuerpo de la solicitud
+            })
+                .then((response) => {
+                    if (response.ok) {
+                        console.log("Empleado creado correctamente");
+                    } else {
+                        throw new Error("Error al crear el empleado");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("Ocurrió un error al procesar la solicitud.");
+                });
         });
-      });
+});
 
 
       
