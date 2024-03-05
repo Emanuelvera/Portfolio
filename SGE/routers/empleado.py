@@ -24,6 +24,7 @@ def get_empleados()-> List[Empleado]:
     result = EmpleadoService(db).get_empleados()
     return JSONResponse (status_code = 200, content = jsonable_encoder(result))
 
+
 #Filtro de empleados // queda pendiente conectarlo con la db
 @empleado_router.get('/empleados/filter', tags=["empleados"], response_model=List[Empleado], status_code=200)
 def get_empleado(id: int | None = None, nombre: str | None = None, apellido: str | None = None,
@@ -48,6 +49,7 @@ def crear_empleado(empleado: Empleado)->dict:
     db = Session()
     EmpleadoService(db).crear_empleado(empleado)
     return JSONResponse (status_code = 201, content = {"message" : "El empleado se ha registrado correctamente"})
+
 
 #Hacer modificaciones en los empleados
 
@@ -75,6 +77,7 @@ def eliminar_empleado(id : int = Path(ge=1, le=2000)) -> dict:
     return JSONResponse (status_code = 200, content = {"message" : "El empleado se ha eliminado correctamente"})
 
 
+
 @empleado_router.get('/empleados/{id}', tags=["empleados"], response_model=Empleado, status_code=200, dependencies = [Depends(JWTBearer())])
 def get_empleado_by_id(id: int = Path(..., title="ID del Empleado a buscar")) -> Empleado:
     db = Session()
@@ -85,4 +88,4 @@ def get_empleado_by_id(id: int = Path(..., title="ID del Empleado a buscar")) ->
         return empleado
     else:
         raise HTTPException(status_code=404, detail="Empleado no encontrado")
-       
+
