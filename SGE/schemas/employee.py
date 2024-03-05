@@ -4,7 +4,7 @@ from typing import  Optional, List
 
 
 
-class Empleado(BaseModel):
+class Employee(BaseModel):
     id         : Optional[int] = None
     nombre     : str = Field (max_length=30)
     apellido   : str = Field (max_length=30)

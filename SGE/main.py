@@ -2,19 +2,19 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from config.database import engine, Base
 from middlewares.error_handler import ErrorHandler
-from routers.empleado import empleado_router
+from routers.employee import employee_router
 from routers.user import user_router
 from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
 
-app.title = "SGE (Sistema de Gestion de Empleados)"
+app.title = "SGE (Sistema de Gestion de Employees)"
 app.version = "0.0.1"
 
 
 app.add_middleware(ErrorHandler)
-app.include_router(empleado_router)
+app.include_router(employee_router)
 app.include_router(user_router)
 
 
@@ -106,7 +106,7 @@ async def message():
   <!-- HTML -->
   <body>
     <div class="container">
-      <h1 class="title">SGE - Sistema de Gestión de Empleados</h1>
+      <h1 class="title">SGE - Sistema de Gestión de Employees</h1>
       <div class="login-box" id="login-box">
         <h2>Iniciar sesión</h2>
         <form id="login-form" method="POST">
@@ -119,23 +119,23 @@ async def message():
         <div class="card">
           <buttom><h2>Crear usuario </h2></buttom>
           <p>Aquí puedes crear un nuevo usuario.</p>
-          <button type="button" id="post-empleado">create</button>
+          <button type="button" id="post-employee">create</button>
         </div>
         <div class="card">
           <buttom><h2>Buscar usuarios</h2></buttom>
           <p>Aquí puedes buscar usuarios existentes.</p>
-          <button type="button" id="get-empleados">List All</button>
-          <button type="button" id="get-empleado">Filter</button>
+          <button type="button" id="get-employees">List All</button>
+          <button type="button" id="get-employee">Filter</button>
         </div>
         <div class="card">
           <buttom><h2>Modificar usuario</h2></buttom>
           <p>Aquí puedes modificar un usuario existente.</p>
-          <button type="button" id="put-empleado">Modify</button>
+          <button type="button" id="put-employee">Modify</button>
         </div>
         <div class="card">
           <buttom><h2>Eliminar usuario</h2></buttom>
           <p>Aquí puedes eliminar un usuario existente.</p>
-          <button type="button" id="delete-empleado">Delete</button>
+          <button type="button" id="delete-employee">Delete</button>
         </div>
       </div>
     </div>
@@ -181,9 +181,9 @@ async def message():
 
       document.addEventListener("DOMContentLoaded", function () {
         document
-          .getElementById("get-empleados")
+          .getElementById("get-employees")
           .addEventListener("click", function () {
-            fetch("http://localhost:5000/empleados", {
+            fetch("http://localhost:5000/employees", {
               method: "GET",
             })
               .then((response) => {
@@ -204,7 +204,7 @@ async def message():
 
       document.addEventListener("DOMContentLoaded", function () {
     document
-      .getElementById("delete-empleado")
+      .getElementById("delete-employee")
       .addEventListener("click", function () {
         let token = localStorage.getItem("jwt_token"); // Obtener token JWT del localStorage
         if (!token) {
@@ -212,12 +212,12 @@ async def message():
           return;
         }
 
-        let id = prompt("Ingrese el ID del empleado a eliminar:");
+        let id = prompt("Ingrese el ID del employee a eliminar:");
         if (!id) {
           return; // Si no se proporciona un ID, salimos de la función
         }
 
-        fetch(`http://localhost:5000/empleados/${id}`, {
+        fetch(`http://localhost:5000/employees/${id}`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -226,9 +226,9 @@ async def message():
         })
           .then((response) => {
             if (response.ok) {
-              console.log("Empleado eliminado correctamente");
+              console.log("Employee eliminado correctamente");
             } else {
-              throw new Error("Error al eliminar el empleado");
+              throw new Error("Error al eliminar el employee");
             }
           })
           .catch((error) => {
@@ -241,7 +241,7 @@ async def message():
       
    document.addEventListener("DOMContentLoaded", function () {
     document
-        .getElementById("post-empleado")
+        .getElementById("post-employee")
         .addEventListener("click", function () {
             let token = localStorage.getItem("jwt_token"); // Obtener token JWT del localStorage
             if (!token) {
@@ -249,19 +249,19 @@ async def message():
                 return;
             }
 
-            let nombre = prompt("Ingrese el nombre del empleado a crear:");
-            let apellido = prompt("Ingrese el apellido del empleado a crear:");
-            let nacimiento = prompt("Ingrese el nacimiento del empleado a crear:");
-            let empresa = prompt("Ingrese el empresa del empleado a crear:");
-            let ingreso = prompt("Ingrese el ingreso del empleado a crear:");
-            let puesto = prompt("Ingrese el puesto del empleado a crear:");
+            let nombre = prompt("Ingrese el nombre del employee a crear:");
+            let apellido = prompt("Ingrese el apellido del employee a crear:");
+            let nacimiento = prompt("Ingrese el nacimiento del employee a crear:");
+            let empresa = prompt("Ingrese el empresa del employee a crear:");
+            let ingreso = prompt("Ingrese el ingreso del employee a crear:");
+            let puesto = prompt("Ingrese el puesto del employee a crear:");
 
             if (!nombre || !apellido || !nacimiento || !empresa || !ingreso || !puesto) {
                 alert("Debe completar todos los campos.");
                 return; // Si no se proporcionan todos los campos, salimos de la función
             }
 
-            let empleadoData = {
+            let employeeData = {
                 nombre: nombre,
                 apellido: apellido,
                 nacimiento: nacimiento,
@@ -270,19 +270,19 @@ async def message():
                 puesto: puesto
             };
 
-            fetch(`http://localhost:5000/empleados`, {
+            fetch(`http://localhost:5000/employees`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}` // Agregar el token JWT como header de autorización
                 },
-                body: JSON.stringify(empleadoData) // Convertir los datos del empleado a JSON y enviarlos en el cuerpo de la solicitud
+                body: JSON.stringify(employeeData) // Convertir los datos del employee a JSON y enviarlos en el cuerpo de la solicitud
             })
                 .then((response) => {
                     if (response.ok) {
-                        console.log("Empleado creado correctamente");
+                        console.log("Employee creado correctamente");
                     } else {
-                        throw new Error("Error al crear el empleado");
+                        throw new Error("Error al crear el employee");
                     }
                 })
                 .catch((error) => {
