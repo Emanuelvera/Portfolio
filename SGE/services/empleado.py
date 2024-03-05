@@ -24,10 +24,9 @@ class EmpleadoService():
         # ... otros filtros ...
         }
 
-        result = self.db.query(EmpleadoModel).filter(
-            *[getattr(EmpleadoModel, field) == value for field, value in filters.items() if value is not None]
-        )
-        return result
+        query_filters = {key: value for key, value in filters.items() if value is not None}
+        filtered_empleados = [empleado for empleado in self.db.query(EmpleadoModel) if all(getattr(empleado, field) == value for field, value in query_filters.items())]
+        return filtered_empleados
     
     def crear_empleado(self, empleado: Empleado):
         new_empleado = EmpleadoModel(**empleado.dict())
@@ -48,6 +47,9 @@ class EmpleadoService():
 
         self.db.commit()
         return 
+    
+    def get_empleado_by_id(self, id: int) -> EmpleadoModel:
+        return self.db.query(EmpleadoModel).filter(EmpleadoModel.id == id).first()
     
     def eliminar_empleado(self, id : int):
     
