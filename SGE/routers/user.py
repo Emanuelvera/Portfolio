@@ -1,14 +1,15 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from utils.jwt_manager import create_token
 from schemas.user import User
 
 user_router = APIRouter()
 
-
-#Login
-@user_router.post('/login', tags= ["auth"])
+# Login
+@user_router.post('/login', tags=["auth"])
 def login(user: User):
     if user.email == "admin" and user.password == "admin":
-        token : str = create_token(user.dict())
-        return JSONResponse(status_code = 200, content = token)
+        token: str = create_token(user.dict())
+        return JSONResponse(status_code=200, content={"token": token})
+    else:
+        raise HTTPException(status_code=401, detail="Invalid credentials")

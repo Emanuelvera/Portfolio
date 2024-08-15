@@ -1,31 +1,38 @@
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-from config.database import engine, Base
-from middlewares.error_handler import ErrorHandler
-from routers.employee import employee_router
-from routers.user import user_router
+from fastapi import FastAPI, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-
+from config.database import Session, engine, Base
+from middlewares.error_handler import ErrorHandler
+from routers.employee import  employee_router, modify_employees
+from routers.user import user_router
+from schemas.employee import Employee
+from schemas.user import User
+from services.employee import EmployeeService
+from routers.user import login as user_login 
+import json
 
 app = FastAPI()
 
-app.title = "SGE (Sistema de Gestion de Employees)"
-app.version = "0.0.1"
+# Montar archivos estáticos
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Configuración de Jinja2
+templates = Jinja2Templates(directory="templates")
+
+# Configuración de Swagger
+app.title = "SGE (Sistema de Gestión de Empleados)"
+app.version = "0.0.1"
 
 app.add_middleware(ErrorHandler)
 app.include_router(employee_router)
 app.include_router(user_router)
 
-
-Base.metadata.create_all(bind = engine)
-
+Base.metadata.create_all(bind=engine)
 
 # Configuración de CORS
-origins = [
-    "*"
-]
-
+origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -35,272 +42,110 @@ app.add_middleware(
 )
 
 
-#Pagina de inicio
+# Página de logueo
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
 
-@app.get("/", tags = ["home"], response_class=HTMLResponse)
-async def message():
-    html_content = """
-    <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SGE - Sistema de Gestión de Usuarios</title>
-    <!-- CSS -->
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: #f4f4f4;
-      }
-      .container {
-        max-width: 1200px;
-        margin: auto;
-        padding: 20px;
-      }
-      .title {
-        text-align: center;
-        font-size: 36px;
-        margin-bottom: 20px;
-      }
-      .login-box {
-        background-color: #fff;
-        border-radius: 8px;
-        padding: 30px;
-        padding-right: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-        max-width: 400px;
-        margin-left: auto;
-        margin-right: auto;
-      }
-      input[type="text"],
-      input[type="password"],
-      input[type="submit"] {
-        width: 90%;
-        padding: 10px;
-        margin-bottom: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-      }
-      input[type="submit"] {
-        background-color: #007bff;
-        color: #fff;
-        cursor: pointer;
-      }
-      .grid-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        grid-gap: 20px;
-      }
-      .card {
-        background-color: #fff;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        text-align: center;
-      }
-    </style>
-  </head>
-  <!-- HTML -->
-  <body>
-    <div class="container">
-      <h1 class="title">SGE - Sistema de Gestión de Employees</h1>
-      <div class="login-box" id="login-box">
-        <h2>Iniciar sesión</h2>
-        <form id="login-form" method="POST">
-          <input type="text" name="email" placeholder="Correo electrónico" />
-          <input type="password" name="password" placeholder="Contraseña" />
-          <input id="login-button" type="submit" value="Iniciar sesión" />
-        </form>
-      </div>
-      <div class="grid-container">
-        <div class="card">
-          <buttom><h2>Crear usuario </h2></buttom>
-          <p>Aquí puedes crear un nuevo usuario.</p>
-          <button type="button" id="post-employee">create</button>
-        </div>
-        <div class="card">
-          <buttom><h2>Buscar usuarios</h2></buttom>
-          <p>Aquí puedes buscar usuarios existentes.</p>
-          <button type="button" id="get-employees">List All</button>
-          <button type="button" id="get-employee">Filter</button>
-        </div>
-        <div class="card">
-          <buttom><h2>Modificar usuario</h2></buttom>
-          <p>Aquí puedes modificar un usuario existente.</p>
-          <button type="button" id="put-employee">Modify</button>
-        </div>
-        <div class="card">
-          <buttom><h2>Eliminar usuario</h2></buttom>
-          <p>Aquí puedes eliminar un usuario existente.</p>
-          <button type="button" id="delete-employee">Delete</button>
-        </div>
-      </div>
-    </div>
+#Autenticacion
+@app.post("/", response_class=RedirectResponse)
+async def login(email: str = Form(...), password: str = Form(...)):
+    user = User(email=email, password=password)
+    
+    # Llama a la función de login en el router y obtén la respuesta
+    response = user_login(user)
+    
+    if response.status_code == 200:
+        token_dict = json.loads(response.body.decode("utf-8"))
+
+        # Redirecciona a la página de inicio después de la autenticación exitosa
+        redirect_response = RedirectResponse(url="/index", status_code=303)
+        redirect_response.set_cookie(key="access_token", value=token_dict, httponly=True)
+        return redirect_response
+    else:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+# Página de inicio después de la autenticación
+@app.get("/index", response_class=HTMLResponse)
+async def index(request: Request):
+    db = Session()
+    employee_service = EmployeeService(db)
+    employees = employee_service.get_employee()
+    return templates.TemplateResponse("index.html", {"request": request, "employees": employees})
+
+#Creacion de usuario
+@app.post("/add_employee", response_class=HTMLResponse)
+async def add_employee(
+    request: Request,
+    nombre: str = Form(...), 
+    apellido: str = Form(...), 
+    nacimiento: str = Form(...), 
+    empresa: str = Form(...), 
+    ingreso: str = Form(...), 
+    puesto: str = Form(...)
+):
+    # Crear un diccionario con los datos recibidos
+    employee_data = {
+        "nombre": nombre,
+        "apellido": apellido,
+        "nacimiento": nacimiento,
+        "empresa": empresa,
+        "ingreso": ingreso,
+        "puesto": puesto
+    }
+
+    # Crear el objeto Employee usando Pydantic
+    employee = Employee(**employee_data)
+
+    # Crear una sesión de base de datos y el servicio de empleado
+    db = Session()
+    employee_service = EmployeeService(db)
+    
+    # Agregar el empleado
+    employee_service.add_employee(employee)
+    
+    # Redirigir después de la inserción
+    return RedirectResponse("/index", status_code=303)
 
 
-    <!-- JAVASCRIPT -->
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-    document
-        .getElementById("login-button")
-        .addEventListener("click", function () {
-            event.preventDefault();
-            let email = document.querySelector('input[name="email"]').value;
-            let password = document.querySelector('input[name="password"]').value;
-
-            var loginData = {
-                email: email,
-                password: password,
-            };
-
-            fetch("http://localhost:5000/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(loginData),
-            })
-                .then((response) => {
-                    document.getElementById("login-box").style.display = "none";
-                    return response.text(); // Convertir la respuesta a texto
-                })
-                .then((data) => {
-                    localStorage.setItem("jwt_token", data.replace(/['"]+/g, '')); //Guarda el token en el local storage
-                    console.log("Token JWT almacenado en el localStorage:", data);
-                })
-                .catch((error) => {
-                    console.error("Error:", error);
-                    alert("Ocurrió un error al procesar tu solicitud. Inténtalo de nuevo más tarde.");
-                });
-        });
-});
+#Eliminacion de usuario
+@app.post("/delete-employee/{id}", response_class=HTMLResponse)
+def delete_employees(id: int):
+    db = Session()
+    employee_service = EmployeeService(db)
+    employee_service.delete_employee(id)
+    return RedirectResponse(url="/index", status_code=303)
 
 
-      document.addEventListener("DOMContentLoaded", function () {
-        document
-          .getElementById("get-employees")
-          .addEventListener("click", function () {
-            fetch("http://localhost:5000/employees", {
-              method: "GET",
-            })
-              .then((response) => {
-                if (response.ok) {
-                  return response.json();
-                } else {
-                  throw new Error("Error al realizar la solicitud GET");
-                }
-              })
-              .then((data) => {
-                console.log(data);
-              })
-              .catch((error) => {
-                console.error("Error:", error);
-              });
-          });
-      });
-
-      document.addEventListener("DOMContentLoaded", function () {
-    document
-      .getElementById("delete-employee")
-      .addEventListener("click", function () {
-        let token = localStorage.getItem("jwt_token"); // Obtener token JWT del localStorage
-        if (!token) {
-          console.error("No se encontró el token JWT en el localStorage");
-          return;
-        }
-
-        let id = prompt("Ingrese el ID del employee a eliminar:");
-        if (!id) {
-          return; // Si no se proporciona un ID, salimos de la función
-        }
-
-        fetch(`http://localhost:5000/employees/${id}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`, // Agregar el token JWT como header de autorización
-          },
-        })
-          .then((response) => {
-            if (response.ok) {
-              console.log("Employee eliminado correctamente");
-            } else {
-              throw new Error("Error al eliminar el employee");
-            }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("Ocurrió un error al procesar la solicitud.");
-          });
-        });
-      });
-
-      
-   document.addEventListener("DOMContentLoaded", function () {
-    document
-        .getElementById("post-employee")
-        .addEventListener("click", function () {
-            let token = localStorage.getItem("jwt_token"); // Obtener token JWT del localStorage
-            if (!token) {
-                console.error("No se encontró el token JWT en el localStorage");
-                return;
-            }
-
-            let nombre = prompt("Ingrese el nombre del employee a crear:");
-            let apellido = prompt("Ingrese el apellido del employee a crear:");
-            let nacimiento = prompt("Ingrese el nacimiento del employee a crear:");
-            let empresa = prompt("Ingrese el empresa del employee a crear:");
-            let ingreso = prompt("Ingrese el ingreso del employee a crear:");
-            let puesto = prompt("Ingrese el puesto del employee a crear:");
-
-            if (!nombre || !apellido || !nacimiento || !empresa || !ingreso || !puesto) {
-                alert("Debe completar todos los campos.");
-                return; // Si no se proporcionan todos los campos, salimos de la función
-            }
-
-            let employeeData = {
-                nombre: nombre,
-                apellido: apellido,
-                nacimiento: nacimiento,
-                empresa: empresa,
-                ingreso: ingreso,
-                puesto: puesto
-            };
-
-            fetch(`http://localhost:5000/employees`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}` // Agregar el token JWT como header de autorización
-                },
-                body: JSON.stringify(employeeData) // Convertir los datos del employee a JSON y enviarlos en el cuerpo de la solicitud
-            })
-                .then((response) => {
-                    if (response.ok) {
-                        console.log("Employee creado correctamente");
-                    } else {
-                        throw new Error("Error al crear el employee");
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error:", error);
-                    alert("Ocurrió un error al procesar la solicitud.");
-                });
-        });
-});
+#Edicion de usuario
+@app.get("/edit-employee/{id}", response_class=HTMLResponse)
+async def edit_employee(request: Request, id: int):
+    db = Session()
+    employee_service = EmployeeService(db)
+    employee = employee_service.get_employee_by_id(id)
+    
+    if not employee:
+        return HTMLResponse(content="Empleado no encontrado", status_code=404)
 
 
-      
-
-    </script>
-  </body>
-</html>
-    """
-    return HTMLResponse(content=html_content,status_code=200)
+    return templates.TemplateResponse("edit-employee.html", {"request": request, "employee": employee})
 
 
+@app.post("/employees/{id}", response_class=HTMLResponse)
+async def modify_employee(request: Request, id: int, nombre: str = Form(...), apellido: str = Form(...), nacimiento: str = Form(...), empresa: str = Form(...), ingreso: str = Form(...), puesto: str = Form(...)):
 
-                        
+    employee_data = Employee(
+        nombre=nombre,
+        apellido=apellido,
+        nacimiento=nacimiento,
+        empresa=empresa,
+        ingreso=ingreso,
+        puesto=puesto
+    )
+
+    response = modify_employees(id, employee_data)
+    
+    if response.status_code == 200:
+        return RedirectResponse("/index", status_code=303)
+    else:
+        raise HTTPException(status_code=response.status_code, detail="No se pudo modificar el empleado.")

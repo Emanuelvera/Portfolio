@@ -1,0 +1,20 @@
+{% extends 'layaout.html' %}
+
+{% block body %} 
+
+    
+    <div class="login-box col-md-4 offset-md-4" id="login-box">
+        <form id="login-form" action="/" method="POST">
+            <div class="mb-3">
+                <h2 style="text-align: center; color:rgb(255, 250, 250)">Iniciar sesión</h2>
+                <input type="text" name="email" placeholder="Correo electrónico" class="form-control" required/>
+            </div>
+            <div class="mb-3">
+                <input type="password" name="password" placeholder="Contraseña" class="form-control" required/>
+            </div>
+            <div class="mb-3">
+                <input id="login-button" type="submit" class="btn btn-secondary form-control" value="Iniciar sesión"/>
+            </div>
+        </form>
+    </div>
+{% endblock %} 

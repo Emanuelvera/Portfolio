@@ -1,0 +1,39 @@
+{% extends 'layaout.html' %}
+
+{% block body %} 
+<div class="col-md-4 offset-md-4">
+    <div class="card card-body">
+        <form action="/employees/{{ employee.id }}" method="post">
+
+            <div class="mb-3">
+                <input type="text" name="nombre" value="{{ employee.nombre }}" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <input type="text" name="apellido" value="{{ employee.apellido }}" class="form-control" required>
+            </div>
+            
+            <div class="mb-3">
+                <input type="date" name="nacimiento" value="{{ employee.nacimiento }}" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <input type="text" name="empresa" value="{{ employee.empresa }}" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <input type="date" name="ingreso" value="{{ employee.ingreso }}" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <input type="text" name="puesto" value="{{ employee.puesto }}" class="form-control" required>
+            </div>
+            
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary btn-block">Guardar cambios</button>
+            </div>    
+        </form>
+    </div>
+</div>
+
+{% endblock %} 

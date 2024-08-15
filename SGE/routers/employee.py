@@ -1,7 +1,7 @@
 from fastapi import APIRouter
-from fastapi import Path, Query, HTTPException, Depends
+from fastapi import Path, HTTPException, Depends
 from fastapi.responses import  JSONResponse
-from typing import  Optional, List
+from typing import  List
 from config.database import Session
 from models.employee import Employee as EmployeeModel
 from fastapi.encoders import jsonable_encoder
@@ -44,41 +44,45 @@ def get_employee(id: int | None = None, nombre: str | None = None, apellido: str
     
 #Creacion de employees
 
-@employee_router.post ('/employees',tags=["employees"], response_model= dict, status_code = 201, dependencies = [Depends(JWTBearer())])
-def crear_employee(employee: Employee)->dict:
+@employee_router.post  ('/employees',tags=["employees"], response_model= dict, status_code = 201)
+def add_employee(employee: Employee)->dict:
     db = Session()
-    EmployeeService(db).crear_employee(employee)
+    EmployeeService(db).add_employee(employee)
     return JSONResponse (status_code = 201, content = {"message" : "El employee se ha registrado correctamente"})
+
+#@employee_router.post ('/employees',tags=["employees"], response_model= dict, status_code = 201, dependencies = [Depends(JWTBearer())])
 
 
 #Hacer modificaciones en los employees
 
-@employee_router.put('/employees/{id}', tags=["employees"], response_model= Employee, status_code = 200, dependencies = [Depends(JWTBearer())])
-def modificar_employees(id : int, employee : Employee, ) -> Employee:
+@employee_router.put('/employees/{id}', tags=["employees"], response_model=dict, status_code=200)
+def modify_employees(id: int, employee: Employee) -> dict:
     db = Session()
+    employee_service = EmployeeService(db)
+    
+    existing_employee = employee_service.get_employee(id)
+    if not existing_employee:
+        return JSONResponse(status_code=404, content={"message": "No se encontró ningún empleado"})
 
-    result = EmployeeService(db).get_employee(id)
-    if not result:
-        return JSONResponse (status_code=404, content={"message" : "No se encontro ningun employee"})
-    EmployeeService(db).modificar_employees(id, employee)
+    employee_service.modify_employees(id, employee)
 
-    return JSONResponse (status_code = 200, content = {"message" : "El employee se ha modificado correctamente"})
+    return JSONResponse(status_code=200, content={"message": "El empleado se ha modificado correctamente"})
 
 
 #Eliminar employees
 
 @employee_router.delete('/employees/{id}', tags=["employees"], response_model= dict, status_code = 200, dependencies = [Depends(JWTBearer())])
-def eliminar_employee(id : int = Path(ge=1, le=2000)) -> dict:
+def delete_employee(id : int = Path(ge=1, le=2000)) -> dict:
     db = Session()
     result:EmployeeModel = db.query(EmployeeModel).filter(EmployeeModel.id == id).first()
     if not result:
         return JSONResponse (status_code=404, content={"message" : "No se encontro ningun employee"})
-    EmployeeService(db).eliminar_employee(id)    
+    EmployeeService(db).delete_employee(id)    
     return JSONResponse (status_code = 200, content = {"message" : "El employee se ha eliminado correctamente"})
 
 
 
-@employee_router.get('/employees/{id}', tags=["employees"], response_model=Employee, status_code=200, dependencies = [Depends(JWTBearer())])
+@employee_router.get('/employees/{id}', tags=["employees"], response_model=Employee, status_code=200)
 def get_employee_by_id(id: int = Path(..., title="ID del Employee a buscar")) -> Employee:
     db = Session()
 

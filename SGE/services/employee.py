@@ -28,13 +28,13 @@ class EmployeeService():
         filtered_employees = [employee for employee in self.db.query(EmployeeModel) if all(getattr(employee, field) == value for field, value in query_filters.items())]
         return filtered_employees
     
-    def crear_employee(self, employee: Employee):
+    def add_employee(self, employee: Employee):
         new_employee = EmployeeModel(**employee.dict())
         self.db.add(new_employee)
         self.db.commit()
         return 
     
-    def modificar_employees(self, id : int, data : Employee):
+    def modify_employees(self, id : int, data : Employee):
     
         employee = self.db.query(EmployeeModel).filter(EmployeeModel.id == id).first()
          
@@ -51,7 +51,7 @@ class EmployeeService():
     def get_employee_by_id(self, id: int) -> EmployeeModel:
         return self.db.query(EmployeeModel).filter(EmployeeModel.id == id).first()
     
-    def eliminar_employee(self, id : int):
+    def delete_employee(self, id : int):
     
         self.db.query(EmployeeModel).filter(EmployeeModel.id == id).delete()
         self.db.commit()
