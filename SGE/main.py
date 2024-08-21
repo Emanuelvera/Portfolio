@@ -25,7 +25,7 @@ templates = Jinja2Templates(directory="templates")
 app.title = "SGE (Sistema de Gestión de Empleados)"
 app.version = "0.0.1"
 
-app.add_middleware(ErrorHandler)
+app.add_middleware(ErrorHandler) 
 app.include_router(employee_router)
 app.include_router(user_router)
 
@@ -82,7 +82,9 @@ async def add_employee(
     nacimiento: str = Form(...), 
     empresa: str = Form(...), 
     ingreso: str = Form(...), 
-    puesto: str = Form(...)
+    puesto: str = Form(...),
+    turno: str = Form(...),
+    dias: list[str] = Form(...)
 ):
     # Crear un diccionario con los datos recibidos
     employee_data = {
@@ -91,7 +93,9 @@ async def add_employee(
         "nacimiento": nacimiento,
         "empresa": empresa,
         "ingreso": ingreso,
-        "puesto": puesto
+        "puesto": puesto,
+        "turno": turno,
+        "dias": dias
     }
 
     # Crear el objeto Employee usando Pydantic
@@ -132,7 +136,7 @@ async def edit_employee(request: Request, id: int):
 
 
 @app.post("/employees/{id}", response_class=HTMLResponse)
-async def modify_employee(request: Request, id: int, nombre: str = Form(...), apellido: str = Form(...), nacimiento: str = Form(...), empresa: str = Form(...), ingreso: str = Form(...), puesto: str = Form(...)):
+async def modify_employee(request: Request, id: int, nombre: str = Form(...), apellido: str = Form(...), nacimiento: str = Form(...), empresa: str = Form(...), ingreso: str = Form(...), puesto: str = Form(...), turno: str = Form(...), dias: str = Form(...)):
 
     employee_data = Employee(
         nombre=nombre,
@@ -140,7 +144,9 @@ async def modify_employee(request: Request, id: int, nombre: str = Form(...), ap
         nacimiento=nacimiento,
         empresa=empresa,
         ingreso=ingreso,
-        puesto=puesto
+        puesto=puesto,
+        turno=turno,
+        dias=dias
     )
 
     response = modify_employees(id, employee_data)

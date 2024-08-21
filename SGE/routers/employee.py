@@ -44,12 +44,24 @@ def get_employee(id: int | None = None, nombre: str | None = None, apellido: str
     
 #Creacion de employees
 
-@employee_router.post  ('/employees',tags=["employees"], response_model= dict, status_code = 201)
-def add_employee(employee: Employee)->dict:
+@employee_router.post('/employees', tags=["employees"], response_model=dict, status_code=201)
+def add_employee(employee: Employee) -> dict:
     db = Session()
-    EmployeeService(db).add_employee(employee)
-    return JSONResponse (status_code = 201, content = {"message" : "El employee se ha registrado correctamente"})
-
+    
+    try:
+        # Crear una instancia del servicio
+        employee_service = EmployeeService(db)
+        
+        # Agregar el empleado y los días de trabajo
+        employee_service.add_employee(employee)
+        
+        # Devolver respuesta exitosa
+        return JSONResponse(
+            status_code=201,
+            content={"message": "El empleado se ha registrado correctamente"}
+        )
+    finally:
+        db.close()
 #@employee_router.post ('/employees',tags=["employees"], response_model= dict, status_code = 201, dependencies = [Depends(JWTBearer())])
 
 

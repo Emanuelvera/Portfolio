@@ -1,9 +1,15 @@
 {% extends 'layaout.html' %}
+{% if message %}
+    <div class="alert alert-success">
+        {{ message }}
+    </div>
+    {% endif %}
 
 {% block body %}
 <div class="row">
     <div class="col-md-4">
         <div class="card-body">
+            <h2 style="text-align: center;color:rgb(255, 255, 255)">Cargar nuevo empleado</h2>
             <form action="/add_employee" method="POST">
                 <div class="mb-3">
                     <input type="text" name="nombre" placeholder="Nombre" class="form-control" required>
@@ -24,12 +30,33 @@
                     <input type="text" name="puesto" placeholder="Puesto" class="form-control" required>
                 </div>
                 <div class="mb-3">
+                    <input list="turno" name="turno" placeholder="Turno" class="form-control" required>
+                    <datalist id="turno">
+                        <option value="Mañana"></option>
+                        <option value="Tarde"></option>
+                        <option value="Noche"></option>
+                      </datalist>
+                </div>
+                <div class="mb-3">
+                    <label for="dias" style="color: aliceblue;">Días de trabajo:</label>
+                    <select name="dias" id="dias" class="form-control" multiple required>
+                        <option value="Lun">Lunes</option>
+                        <option value="Mar">Martes</option>
+                        <option value="Mie">Miércoles</option>
+                        <option value="Jue">Jueves</option>
+                        <option value="Vie">Viernes</option>
+                        <option value="Sab">Sábado</option>
+                        <option value="Dom">Domingo</option>
+                    </select>
+                </div>
+                <div class="mb-3">
                     <button type="submit" id="post-employee" class="btn btn-primary btn-block">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
     <div class="col-md-8">
+        <h2 style="text-align: center;color: rgb(255, 255, 255)" >Empleados Activos</h2>
         <table class="table table-striped table-borderless bg-white table-sm " >
             <thead class="table-dark">
                 <tr>
@@ -40,6 +67,8 @@
                     <td>Ingreso</td>
                     <td>Puesto</td>
                     <td>Operaciones</td>
+                    <td>Turno</td>
+                    <td>Dias</td>
                 </tr>
             </thead>
             <tbody>
@@ -51,6 +80,8 @@
                         <td>{{ employee.empresa }}</td>
                         <td>{{ employee.ingreso }}</td>
                         <td>{{ employee.puesto }}</td>
+                        <td>{{ employee.turno }}</td>
+                        <td>{{ employee.dias }}</td>
                         <td>
                             <a href="/edit-employee/{{ employee.id }}" class="btn btn-secondary" style="display: inline-block;">Editar</a>
                             <form action="/delete-employee/{{ employee.id }}"  method="post" style="display: inline-block;">
