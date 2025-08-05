@@ -1,4 +1,4 @@
-# Proyecto de Gestión de Employees
+# Proyecto de Gestión de Empleados
 
 Este proyecto consiste en una aplicación web para gestionar employees. A continuación, se detallan los pasos necesarios para ejecutarla en tu entorno local.
 
